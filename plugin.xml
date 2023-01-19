@@ -12,7 +12,7 @@
     <extra-decision>
 <!--        <GlobalRequestFilterProvider class="cn.hu516.oauth2.DecisionDomainLogin"/>-->
         <GlobalRequestFilterProvider class="cn.hu516.oauth2.ReportDomainLogin"/>
-        <GlobalRequestFilterProvider class="cn.hu516.oauth2.EntryDomainLogin"/>
+<!--        <GlobalRequestFilterProvider class="cn.hu516.oauth2.EntryDomainLogin"/>-->
     </extra-decision>
     <function-recorder class="cn.hu516.LoginFilter"/>
 </plugin>
