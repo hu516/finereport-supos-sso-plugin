@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project>
+    <target name="compile_encrypt_javas" depends="copyFiles">
+        <echo message="加密文件"/>
+        <echo message="${projectDir}"/>
+        <taskdef name="pretreatment" classname="com.fr.plugin.pack.PluginPretreatmentTask">
+            <classpath refid="compile.classpath"/>
+        </taskdef>
+        <pretreatment baseDir="${projectDir}"/>
+    </target>
+    <target name="compile_plain_javas" depends="copyFiles">
+    </target>
+</project>

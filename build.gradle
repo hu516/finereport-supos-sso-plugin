@@ -1,0 +1,127 @@
+
+apply plugin: 'java'
+
+
+ext {
+    /**
+     * 项目中依赖的jar的路径
+     * 1.如果依赖的jar需要打包到zip中,放置在lib根目录下
+     * 2.如果依赖的jar仅仅是编译时需要，防止在lib下子目录下即可
+     */
+    libPath = "$projectDir/lib"
+
+    /**
+     * 是否对插件的class进行加密保护，防止反编译
+     */
+    guard = false
+
+    def pluginInfo = getPluginInfo()
+    pluginPre = "fine-plugin"
+    pluginName = pluginInfo.id
+    pluginVersion = pluginInfo.version
+
+    outputPath = "$projectDir/webroot/WEB-INF/plugins/plugin-" + pluginName + "-1.0/classes"
+}
+
+group = 'com.fr.plugin'
+version = '10.0'
+sourceCompatibility = '8'
+
+sourceSets {
+    main {
+        java.outputDir = file(outputPath)
+        output.resourcesDir = file(outputPath)
+    }
+}
+
+ant.importBuild("encrypt.xml")
+//定义ant变量
+ant.projectDir = projectDir
+ant.references["compile.classpath"] = ant.path {
+    fileset(dir: libPath, includes: '**/*.jar')
+    fileset(dir: ".",includes:"**/*.jar" )
+}
+
+classes.dependsOn('clean')
+
+task copyFiles(type: Copy,dependsOn: 'classes'){
+    from outputPath
+    into "$projectDir/classes"
+}
+
+task preJar(type:Copy,dependsOn: guard ? 'compile_encrypt_javas' : 'compile_plain_javas'){
+    from "$projectDir/classes"
+    into "$projectDir/transform-classes"
+    include "**/*.*"
+}
+jar.dependsOn("preJar")
+
+task makeJar(type: Jar,dependsOn: preJar){
+    from fileTree(dir: "$projectDir/transform-classes")
+    baseName pluginPre
+    appendix pluginName
+    version pluginVersion
+    destinationDir = file("$buildDir/libs")
+
+    doLast(){
+        delete file("$projectDir/classes")
+        delete file("$projectDir/transform-classes")
+    }
+}
+
+task copyFile(type: Copy,dependsOn: ["makeJar"]){
+    from "$buildDir/libs"
+    from("$projectDir/lib") {
+        include "*.jar"
+    }
+    from "$projectDir/plugin.xml"
+    into file("$buildDir/temp/plugin")
+}
+
+task zip(type:Zip,dependsOn:["copyFile"]){
+    from "$buildDir/temp/plugin"
+    destinationDir file("$buildDir/install")
+    baseName pluginPre
+    appendix pluginName
+    version pluginVersion
+}
+
+//控制build时包含哪些文件,排除哪些文件
+processResources {
+//    exclude everything
+//    用*.css没效果
+//    exclude '**/*.css'
+//    except this file
+//    include 'xx.xml'
+}
+
+/*读取plugin.xml中的version*/
+def getPluginInfo(){
+    def xmlFile = file("plugin.xml")
+    if (!xmlFile.exists()) {
+        return ["id":"none", "version":"1.0.0"]
+    }
+    def plugin = new XmlParser().parse(xmlFile)
+    def version = plugin.version[0].text()
+    def id = plugin.id[0].text()
+    return ["id":id,"version":version]
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = uri('http://mvn.finedevelop.com/repository/maven-public/')
+    }
+}
+
+dependencies {
+    //使用本地jar
+    implementation  fileTree(dir: 'lib', include: ['**/*.jar'])
+    implementation  fileTree(dir: libPath, include: ['**/*.jar'])
+    implementation 'com.fr.decision:fine-decision:10.0-RELEASE-SNAPSHOT'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
