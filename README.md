@@ -1,4 +1,4 @@
-基于https://code.fanruan.com/hugh/video-demo-sso-login实现的帆软报表supOS单点登录插件
+基于https://code.fanruan.com/hugh/video-demo-sso-login 实现的帆软报表supOS单点登录插件
 
 #### 适用于：
 
